@@ -936,7 +936,7 @@ idAI::FindPathAroundObstacles
 */
 bool idAI::FindPathAroundObstacles( const idPhysics *physics, const idAAS *aas, const idEntity *ignore, const idVec3 &startPos, const idVec3 &seekPos, obstaclePath_t &path ) {
 	int numObstacles, areaNum, insideObstacle;
-	obstacle_t obstacles[MAX_OBSTACLES];
+	static obstacle_t obstacles[MAX_OBSTACLES];
 	idBounds clipBounds;
 	idBounds bounds;
 	pathNode_t *root;

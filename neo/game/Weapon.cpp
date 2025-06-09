@@ -261,7 +261,6 @@ idWeapon::Save
 ================
 */
 void idWeapon::Save( idSaveGame *savefile ) const {
-
 	savefile->WriteInt( status );
 	savefile->WriteObject( thread );
 	savefile->WriteString( state );
@@ -295,7 +294,7 @@ void idWeapon::Save( idSaveGame *savefile ) const {
 
 	savefile->WriteVec3( pushVelocity );
 
-	savefile->WriteString( weaponDef->GetName() );
+    savefile->WriteString( weaponDef->GetName() );
 	savefile->WriteFloat( meleeDistance );
 	savefile->WriteString( meleeDefName );
 	savefile->WriteInt( brassDelay );

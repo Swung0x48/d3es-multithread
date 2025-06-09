@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "renderer/Image.h"
 
 #include "framework/GameCallbacks_local.h"
+#include <sys/stat.h>
 
 const char *imageFilter[] = {
 	"GL_LINEAR_MIPMAP_NEAREST",
@@ -124,7 +125,7 @@ Creates a 0-255 ramp image
 */
 static void R_RampImage( idImage *image ) {
 	int		x;
-	byte	data[256][4];
+	static byte	data[256][4];
 
 	for (x=0 ; x<256 ; x++) {
 		data[x][0] =
@@ -146,7 +147,7 @@ Creates a ramp that matches our fudged specular calculation
 */
 static void R_SpecularTableImage( idImage *image ) {
 	int		x;
-	byte	data[256][4];
+	static byte	data[256][4];
 
 	for (x=0 ; x<256 ; x++) {
 		float f = x/255.f;
@@ -183,7 +184,7 @@ Create a 2D table that calculates ( reflection dot , specularity )
 */
 static void R_Specular2DTableImage( idImage *image ) {
 	int		x, y;
-	byte	data[256][256][4];
+	static byte	data[256][256][4];
 
 	memset( data, 0, sizeof( data ) );
 		for ( x = 0 ; x < 256 ; x++ ) {
@@ -218,7 +219,7 @@ to allow you to see the mapping coordinates on a surface
 #define	DEFAULT_SIZE	16
 void idImage::MakeDefault() {
 	int		x, y;
-	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	static byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
 	if ( com_developer.GetBool() ) {
 		// grey center
@@ -276,7 +277,7 @@ static void R_DefaultImage( idImage *image ) {
 }
 
 static void R_WhiteImage( idImage *image ) {
-	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	static byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
 	// solid white texture
 	memset( data, 255, sizeof( data ) );
@@ -285,7 +286,7 @@ static void R_WhiteImage( idImage *image ) {
 }
 
 static void R_BlackImage( idImage *image ) {
-	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	static byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
 	// solid black texture
 	memset( data, 0, sizeof( data ) );
@@ -297,7 +298,7 @@ static void R_BlackImage( idImage *image ) {
 // the size determines how far away from the edge the blocks start fading
 static const int BORDER_CLAMP_SIZE = 32;
 static void R_BorderClampImage( idImage *image ) {
-	byte	data[BORDER_CLAMP_SIZE][BORDER_CLAMP_SIZE][4];
+	static byte	data[BORDER_CLAMP_SIZE][BORDER_CLAMP_SIZE][4];
 
 	// solid white texture with a single pixel black border
 	memset( data, 255, sizeof( data ) );
@@ -333,7 +334,7 @@ static void R_BorderClampImage( idImage *image ) {
 }
 
 static void R_RGBA8Image( idImage *image ) {
-	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	static byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 
 	memset( data, 0, sizeof( data ) );
 	data[0][0][0] = 16;
@@ -361,7 +362,7 @@ static void R_RGB8Image( idImage *image ) {
 #endif
 
 static void R_AlphaNotchImage( idImage *image ) {
-	byte	data[2][4];
+	static byte	data[2][4];
 
 	// this is used for alpha test clip planes
 
@@ -375,7 +376,7 @@ static void R_AlphaNotchImage( idImage *image ) {
 }
 
 static void R_FlatNormalImage( idImage *image ) {
-	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	static byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 	int		i;
 
 	int red = 3;
@@ -392,7 +393,7 @@ static void R_FlatNormalImage( idImage *image ) {
 }
 
 static void R_AmbientNormalImage( idImage *image ) {
-	byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
+	static byte	data[DEFAULT_SIZE][DEFAULT_SIZE][4];
 	int		i;
 
 	int red = 3;
@@ -495,7 +496,7 @@ CreatePitFogImage
 ===============
 */
 void CreatePitFogImage( void ) {
-	byte	data[16][16][4];
+	static byte	data[16][16][4];
 	int		i, j;
 
 	memset( data, 0, sizeof( data ) );
@@ -531,7 +532,7 @@ CreatealphaSquareImage
 ===============
 */
 void CreatealphaSquareImage( void ) {
-	byte	data[16][16][4];
+	static byte	data[16][16][4];
 	int		i, j;
 
 	for ( i = 0 ; i < 16 ; i++ ) {
@@ -656,7 +657,7 @@ This is a solid white texture that is zero clamped.
 */
 static void R_CreateNoFalloffImage( idImage *image ) {
 	int		x,y;
-	byte	data[16][FALLOFF_TEXTURE_SIZE][4];
+	static byte	data[16][FALLOFF_TEXTURE_SIZE][4];
 
 	memset( data, 0, sizeof( data ) );
 	for (x=1 ; x<FALLOFF_TEXTURE_SIZE-1 ; x++) {
@@ -684,7 +685,7 @@ const int	FOG_SIZE = 128;
 
 void R_FogImage( idImage *image ) {
 	int		x,y;
-	byte	data[FOG_SIZE][FOG_SIZE][4];
+	static byte	data[FOG_SIZE][FOG_SIZE][4];
 	int		b;
 
 float	step[256];
@@ -805,7 +806,7 @@ start and end points to the terminator plane
 */
 void R_FogEnterImage( idImage *image ) {
 	int		x,y;
-	byte	data[FOG_ENTER_SIZE][FOG_ENTER_SIZE][4];
+	static byte	data[FOG_ENTER_SIZE][FOG_ENTER_SIZE][4];
 	int		b;
 
 	for (x=0 ; x<FOG_ENTER_SIZE ; x++) {
@@ -844,7 +845,7 @@ static const int	QUADRATIC_HEIGHT = 4;
 
 void R_QuadraticImage( idImage *image ) {
 	int		x,y;
-	byte	data[QUADRATIC_HEIGHT][QUADRATIC_WIDTH][4];
+	static byte	data[QUADRATIC_HEIGHT][QUADRATIC_WIDTH][4];
 	int		b;
 
 

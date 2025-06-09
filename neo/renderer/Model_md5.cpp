@@ -26,6 +26,7 @@ If you have questions concerning this license or the applicable additional terms
 ===========================================================================
 */
 
+#include <memory>
 #include "sys/platform.h"
 #include "framework/Session.h"
 #include "renderer/tr_local.h"
@@ -235,13 +236,16 @@ void idMD5Mesh::ParseMesh( idLexer &parser, int numJoints, const idJointMat *joi
 	// build the information that will be common to all animations of this mesh:
 	// silhouette edge connectivity and normal / tangent generation information
 	//
-	idDrawVert *verts = (idDrawVert *) _alloca16( texCoords.Num() * sizeof( idDrawVert ) );
+//	idDrawVert *verts = (idDrawVert *) _alloca16( texCoords.Num() * sizeof( idDrawVert ) );
+	idDrawVert *verts = (idDrawVert *) Mem_Alloc16( texCoords.Num() * sizeof( idDrawVert ) );
 	for ( i = 0; i < texCoords.Num(); i++ ) {
 		verts[i].Clear();
 		verts[i].st = texCoords[i];
 	}
 	TransformVerts( verts, joints );
 	deformInfo = R_BuildDeformInfo( texCoords.Num(), verts, tris.Num(), tris.Ptr(), shader->UseUnsmoothedTangents() );
+    
+    Mem_Free16(verts);
 }
 
 /*
@@ -261,9 +265,10 @@ Special transform to make the mesh seem fat or skinny.  May be used for zombie d
 ====================
 */
 void idMD5Mesh::TransformScaledVerts( idDrawVert *verts, const idJointMat *entJoints, float scale ) {
-	idVec4 *scaledWeights = (idVec4 *) _alloca16( numWeights * sizeof( scaledWeights[0] ) );
+	idVec4 *scaledWeights = (idVec4 *) Mem_Alloc16( numWeights * sizeof( scaledWeights[0] ) );
 	SIMDProcessor->Mul( scaledWeights[0].ToFloatPtr(), scale, scaledWeights[0].ToFloatPtr(), numWeights * 4 );
 	SIMDProcessor->TransformVerts( verts, texCoords.Num(), entJoints, scaledWeights, weightIndex, numWeights );
+    Mem_Free16(scaledWeights);
 }
 
 /*
@@ -352,11 +357,13 @@ idMD5Mesh::CalcBounds
 */
 idBounds idMD5Mesh::CalcBounds( const idJointMat *entJoints ) {
 	idBounds	bounds;
-	idDrawVert *verts = (idDrawVert *) _alloca16( texCoords.Num() * sizeof( idDrawVert ) );
+	idDrawVert *verts = (idDrawVert *) Mem_Alloc16( texCoords.Num() * sizeof( idDrawVert ) );
 
 	TransformVerts( verts, entJoints );
 
 	SIMDProcessor->MinMax( bounds[0], bounds[1], verts, texCoords.Num() );
+    
+    Mem_Free16(verts);
 
 	return bounds;
 }
@@ -493,7 +500,8 @@ void idRenderModelMD5::LoadModel() {
 	int			num;
 	int			parentNum;
 	idToken		token;
-	idLexer		parser( LEXFL_ALLOWPATHNAMES | LEXFL_NOSTRINGESCAPECHARS );
+    std::unique_ptr<idLexer> pParser = std::make_unique<idLexer>(LEXFL_ALLOWPATHNAMES | LEXFL_NOSTRINGESCAPECHARS);
+    idLexer&    parser = *pParser;
 	idJointQuat	*pose;
 	idMD5Joint	*joint;
 	idJointMat *poseMat3;
@@ -528,7 +536,7 @@ void idRenderModelMD5::LoadModel() {
 	joints.SetNum( num );
 	defaultPose.SetGranularity( 1 );
 	defaultPose.SetNum( num );
-	poseMat3 = ( idJointMat * )_alloca16( num * sizeof( *poseMat3 ) );
+	poseMat3 = ( idJointMat * )Mem_Alloc16( num * sizeof( *poseMat3 ) );
 
 	// parse num meshes
 	parser.ExpectTokenString( "numMeshes" );
@@ -570,6 +578,7 @@ void idRenderModelMD5::LoadModel() {
 
 	// set the timestamp for reloadmodels
 	fileSystem->ReadFile( name, NULL, &timeStamp );
+    Mem_Free16(poseMat3);
 }
 
 /*

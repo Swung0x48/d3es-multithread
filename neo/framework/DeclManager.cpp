@@ -42,6 +42,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "framework/DeclTable.h"
 #include "renderer/Material.h"
 #include "sound/sound.h"
+#include <cstdlib>
 
 #include "framework/DeclManager.h"
 
@@ -479,7 +480,7 @@ HuffmanCompressText
 */
 int HuffmanCompressText( const char *text, int textLength, byte *compressed, int maxCompressedSize ) {
 	int i, j;
-	idBitMsg msg;
+	static idBitMsg msg;
 
 	totalUncompressedLength += textLength;
 
@@ -617,8 +618,11 @@ int c_savedMemory = 0;
 
 int idDeclFile::LoadAndParse() {
 	int			i, numTypes;
-	idLexer		src;
-	idToken		token;
+    idLexer*     pSrc = new idLexer;
+    idToken*     pToken = new idToken;
+    
+	idLexer&		src = *pSrc;
+	idToken&		token = *pToken;
 	int			startMarker;
 	char *		buffer;
 	int			length, size;
@@ -785,6 +789,9 @@ int idDeclFile::LoadAndParse() {
 			decl->sourceLine = decl->sourceFile->numLines;
 		}
 	}
+    
+    delete pSrc;
+    delete pToken;
 
 	return checksum;
 }
@@ -1936,10 +1943,11 @@ void idDeclLocal::SetTextLocal( const char *text, const int length ) {
 
 #ifdef USE_COMPRESSED_DECLS
 	int maxBytesPerCode = ( maxHuffmanBits + 7 ) >> 3;
-	byte *compressed = (byte *)_alloca( length * maxBytesPerCode );
+	byte *compressed = (byte *)Mem_Alloc( length * maxBytesPerCode );
 	compressedLength = HuffmanCompressText( text, length, compressed, length * maxBytesPerCode );
 	textSource = (char *)Mem_Alloc( compressedLength );
 	memcpy( textSource, compressed, compressedLength );
+    Mem_Free(compressed);
 #else
 	compressedLength = length;
 	textSource = (char *) Mem_Alloc( length + 1 );

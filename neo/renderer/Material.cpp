@@ -33,6 +33,7 @@ If you have questions concerning this license or the applicable additional terms
 #include "ui/Window.h"
 #include "ui/UserInterface.h"
 #include "sound/sound.h"
+#include <sys/stat.h>
 
 #include "renderer/Material.h"
 
@@ -2124,7 +2125,7 @@ Parses the current material definition and finds all necessary images.
 bool idMaterial::Parse( const char *text, const int textLength ) {
 	idLexer	src;
 	idToken	token;
-	mtrParsingData_t parsingData;
+	static mtrParsingData_t parsingData;
 
 	src.LoadMemory( text, textLength, GetFileName(), GetLineNum() );
 	src.SetFlags( DECL_LEXER_FLAGS );

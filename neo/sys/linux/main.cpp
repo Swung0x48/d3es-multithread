@@ -76,6 +76,8 @@ If you have questions concerning this license or the applicable additional terms
 #define PATH_MAX 4096
 #endif
 
+#define SANDBOX_PATH "/data/storage/el2/base/haps/entry/files"
+
 static char path_argv[PATH_MAX];
 static char path_exe[PATH_MAX];
 static char save_path[PATH_MAX];
@@ -87,7 +89,7 @@ const char* Posix_GetSavePath()
 
 static void SetSavePath()
 {
-	const char* s = getenv("XDG_DATA_HOME");
+	const char* s = SANDBOX_PATH; //getenv("XDG_DATA_HOME");
 	if (s)
 		D3_snprintfC99(save_path, sizeof(save_path), "%s/dhewm3", s);
 	else
@@ -115,7 +117,8 @@ static void SetExecutablePath(char* exePath)
 		// an error occured, clear exe path
 		exePath[0] = '\0';
 	}
-
+#elif defined (__OHOS__)
+    strcpy(exePath, SANDBOX_PATH);
 #elif defined(__linux)
 
 	// all the platforms that have /proc/$pid/exe or similar that symlink the
@@ -407,6 +410,7 @@ void idSysLocal::OpenURL( const char *url, bool quit ) {
 main
 ===============
 */
+__attribute__((visibility("default")))
 int main(int argc, char **argv) {
 	// Prevent running Doom 3 as root
 	// Borrowed from Yamagi Quake II
@@ -438,7 +442,7 @@ int main(int argc, char **argv) {
 	// $LC_ALL which usually is not "C" and will fuck up scanf, strtod
 	// etc when using a locale that uses ',' as a float radix.
 	// so set $LC_ALL to "C".
-	setenv("LC_ALL", "C", 1);
+//	setenv("LC_ALL", "C", 1);
 
 	Posix_InitSignalHandlers();
 

@@ -202,6 +202,8 @@ if (SDL2)
 	endif()
 	find_package(SDL2 REQUIRED)
 	include_directories(${SDL2_INCLUDE_DIR})
+	include_directories(${SDL2_INCLUDE_DIR}/SDL2)
+	message(STATUS "include_directories ${SDL2_INCLUDE_DIR}")
 	set(SDLx_LIBRARY ${SDL2_LIBRARY})
 else()
 	# skip SDLmain
@@ -294,10 +296,10 @@ if(D3_COMPILER_IS_GCC_OR_CLANG)
 		endif ()
 	endif ()
 
-	set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -D_DEBUG -O0")
+	set(CMAKE_C_FLAGS_DEBUG "-g -ggdb -D_DEBUG -O0 -Wall")
 	set(CMAKE_C_FLAGS_DEBUGALL "-g -ggdb -D_DEBUG")
 	set(CMAKE_C_FLAGS_PROFILE "-g -ggdb -D_DEBUG -O1 -fno-omit-frame-pointer")
-	set(CMAKE_C_FLAGS_RELEASE "-O2 -fno-math-errno -fno-trapping-math -fomit-frame-pointer")
+	set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-math-errno -fno-trapping-math -fomit-frame-pointer")
 	set(CMAKE_C_FLAGS_RELWITHDEBINFO "-g -ggdb -O2 -fno-math-errno -fno-trapping-math -fno-omit-frame-pointer")
 	set(CMAKE_C_FLAGS_MINSIZEREL "-Os -fno-math-errno -fno-trapping-math -fomit-frame-pointer")
 
@@ -385,6 +387,10 @@ if(D3_COMPILER_IS_GCC_OR_CLANG)
 	elseif(os STREQUAL "freebsd")
 		find_library(EXECINFO_LIBRARIES execinfo /usr/lib /usr/local/lib)
 		set(sys_libs ${sys_libs} ${EXECINFO_LIBRARIES})
+	elseif (os STREQUAL "ohos")
+		# HarmonyOS requires a larger stack size for _alloca() to work properly 
+		message(STATUS "Setting stack size to 8MB for HarmonyOS")
+		set(ldflags "${ldflags} -Wl,-z,stack-size=8388608 -Wl,--lto-O3,-O3,-Bsymbolic-functions,--as-needed")
 	endif()
 elseif(MSVC)
 	add_compile_options(/MP) # parallel build (use all cores, or as many as configured in VS)
@@ -1156,7 +1162,7 @@ if(HARDLINK_GAME)
 endif()# HARDLINK_GAME
 
 if(CORE)
-	add_executable(${DHEWM3BINARY} WIN32 MACOSX_BUNDLE
+	add_library(${DHEWM3BINARY} SHARED
 		${src_core}
 		${src_sys_base}
 		${src_sys_core}
@@ -1289,4 +1295,19 @@ if(D3XP AND NOT HARDLINK_GAME)
 				ARCHIVE DESTINATION "${libdir}"
 		)
 	endif()
+endif()
+
+if (OHOS)
+  find_package(cjson REQUIRED)
+  find_library(OHOS_ACE_LIBRARY NAMES libace_napi.z.so ace)
+  find_library(OHOS_LOG_LIBRARY NAMES libhilog_ndk.z.so hilog)
+  find_library(OHOS_NDK_LIBRARY NAMES libace_ndk.z.so ndk)
+  find_library(OHOS_RAWFILE_LIBRARY NAMES librawfile.z.so rawfile)
+  find_library(OHOS_PIXELMAP_LIBRARY NAMES libpixelmap_ndk.z.so pixelmap)
+  list(APPEND EXTRA_LIBS ${OHOS_ACE_LIBRARY} ${OHOS_LOG_LIBRARY} ${OHOS_NDK_LIBRARY} ${OHOS_RAWFILE_LIBRARY} ${OHOS_PIXELMAP_LIBRARY} cjson)
+  add_definitions(-DOHOS_PLATFORM)
+  find_library(OHOS_AUDIO_LIBRARY NAMES libohaudio.so ohaudio)
+    list(APPEND EXTRA_LIBS ${OHOS_AUDIO_LIBRARY})
+    target_link_libraries(${DHEWM3BINARY} ${EXTRA_LIBS})
+    message(STATUS EXTRA_LIBS=${EXTRA_LIBS})
 endif()

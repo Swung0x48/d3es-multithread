@@ -3606,7 +3606,7 @@ bool idEntity::TouchTriggers( void ) const {
 	idClipModel *	cm;
 	idClipModel *	clipModels[ MAX_GENTITIES ];
 	idEntity *		ent;
-	trace_t			trace;
+	static trace_t			trace;
 
 	memset( &trace, 0, sizeof( trace ) );
 	trace.endpos = GetPhysics()->GetOrigin();
